@@ -2,14 +2,18 @@ import requests
 import json
 import subprocess
 
-defect_dojo_api = 'ecb3e4d1efdfa4663031f66a0d3c7a3cd07f4bc6' # need discussion
-url = 'http://54.157.54.222:8080/api/v2/users'
+defect_dojo_api = 'ecb3e4d1efdfa4663031f66a0d3c7a3cd07f4bc6' # change it
+ip = "127.0.0.1" # change it
+port = "8080" # change it
+url = 'http://{}:{}/api/v2/users'.format(ip, port)
 headers = {'content-type': 'application/json',
             'Authorization': 'Token {}'.format(defect_dojo_api)}
+dojo_user = "" # change it
+dojo_password = "" # change it
 
-engagements = requests.get('http://54.157.54.222:8080/api/v2/engagements', headers=headers, verify=True)
+engagements = requests.get('http://{}:{}/api/v2/engagements'.format(ip, port), headers=headers, verify=False)
 engagements_list = json.loads(engagements.content.decode('utf-8'))['results']
-products = requests.get('http://54.157.54.222:8080/api/v2/products/', headers=headers, verify=True)
+products = requests.get('http://{}:{}/api/v2/products/'.format(ip, port), headers=headers, verify=False)
 products_list = json.loads(products.content.decode('utf-8'))['results']
 
 for product in products_list:
@@ -20,7 +24,6 @@ for product in products_list:
             report = requests.get(wordfence_request)
             report_decoded = json.loads(report.content.decode('utf-8'))
             domain, api = product['description'].split(' ')
-            print(wordfence_request)
             dumped = json.dumps(report_decoded, indent=0)
             with open('temp_file.json', 'w') as f:
                 f.write(dumped)
@@ -28,7 +31,7 @@ for product in products_list:
                            'Authorization': 'Token {}'.format(defect_dojo_api),
                            'accept': 'application/json'}
 
-            subprocess.run(["curl", "-X", "POST", "http://54.157.54.222:8080/api/v2/import-scan/",
+            subprocess.run(["curl", "-X", "POST", "http://{}:{}/api/v2/import-scan/".format(ip, port),
                                 "-H", "accept: application/json",
                                 "-H","Authorization: Token {}".format(defect_dojo_api),
                                 "-H", "Content-Type: multipart/form-data",
@@ -36,12 +39,12 @@ for product in products_list:
                                 "-F", "active=true",
                                 "-F", "verified=true",
                                 "-F", "scan_type=Wordfence Scan",
-                                "-F", "file=@temp_file1.json;type=application/json",
+                                "-F", "file=@temp_file.json;type=application/json",
                                 "-F", "product_name={}".format(product['name']),
                                 "-F", "engagement={}".format(engagement['id']),
                                 "-F", "close_old_findings=false",
                                 "-F", "push_to_jira=false",
-                                "-u", "test:test" #need discussion
+                                "-u", "{}:{}".format(dojo_user, dojo_password)
                                ])
             break
 
