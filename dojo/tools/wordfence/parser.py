@@ -41,7 +41,7 @@ class WordfenceParser(object):
         for item in tree:
             finding = Finding(
                 test=test,
-                title=item["type"],
+                title=item["shortMsg"],
                 description=html2text(item["shortMsg"]),
                 severity=self.MAPPING_SEVERITY.get(item["severity"]),
                 scanner_confidence=self.MAPPING_CONFIDENCE.get(item["severity"]),
